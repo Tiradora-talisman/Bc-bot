@@ -83,7 +83,6 @@ if_not $key_remove_everyone = $empty
 end_if
 return
 
-// Close the open windows and prepare the game screen
 :setup
 repeat 3
     left 997, 97
@@ -140,10 +139,11 @@ else
 end_if
 return
 
-// Press the attack key in $k only if it is not blank
+// Press the attack key in $k only if it is not blank, then switch target
 :press_attack
 if_not $k = $empty
     send $k 1200
+    send $key_target
 end_if
 return
 
@@ -173,6 +173,12 @@ if_not $k = $empty
     gosub check_heal
     gosub check_mana
 end_if
+return
+
+// One round: all attacks (each followed by a target switch), then a final heal check
+:attack_round
+gosub use_attacks
+gosub check_heal
 return
 
 // HP check used during the fight
@@ -205,9 +211,7 @@ if #b = 0
 end_if
 return
 
-// Mana check used during the boss fight
-// If the mana color is not found (mana bar has dropped), press the quick mana key once,
-// same style as the non-healer HP quick heal check
+// If the mana color is not found (mana bar has dropped), press the quick mana key once
 :check_mana
 set #m findcolor (148, 53 976, 471 11229696 %arr)
 if #m = 0
@@ -298,7 +302,6 @@ end_while
 left 279, 392
 wait 2s
 
-// Sell 10 items
 repeat 10
     left #sell_x #sell_y
     wait 100
@@ -652,9 +655,6 @@ return
 
 // Walk to the boss NPC, enter the boss area and fight the boss
 :boss_fight
-// The boss floor check is disabled for now.
-// Add it back once the boss floor color and region are confirmed.
-
 // Click the NPC path until the color is found (max 20 tries)
 set #tries 0
 
@@ -742,19 +742,17 @@ end_while
 // Remove the mount
 send $key_mount
 
-// Attack loop: keeps attacking non stop until the boss color is missing 2 rounds in a row
-// HP and mana are checked after every attack inside use_attacks
-// Safety limit of 500 rounds so it can never run forever
+// Attack loop: 3 rounds per pass, each round ends with a heal check and a target switch
+// Stops when the boss color is missing 2 passes in a row
+// Safety limit of 500 passes so it can never run forever
 set #miss 0
 set #rounds 0
+send $key_target
 while 1
-    send $key_target
-    send $key_target
-    gosub use_attacks
-    gosub use_attacks
-    gosub use_attacks
+    gosub attack_round
+    gosub attack_round
+    gosub attack_round
 
-    // Count the rounds in a row without the boss color
     set #c findcolor (465, 48 473, 79 185 %arr)
     if #c = 0
         set #miss #miss + 4
