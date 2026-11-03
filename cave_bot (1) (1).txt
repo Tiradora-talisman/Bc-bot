@@ -16,7 +16,7 @@ set $key_attack2 1
 set $key_attack3 1
 set $key_attack4 1
 // How many attack rounds per pass (each round uses all attack keys once)
-set #attack_rounds 3
+set #attack_rounds 300
 set $key_target tab
 set $key_teleport 4
 set $key_mountspeed 3
