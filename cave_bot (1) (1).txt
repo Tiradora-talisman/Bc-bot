@@ -15,6 +15,8 @@ set $key_attack1 1
 set $key_attack2 1
 set $key_attack3 1
 set $key_attack4 1
+// How many attack rounds per pass (each round uses all attack keys once)
+set #attack_rounds 3
 set $key_target tab
 set $key_teleport 4
 set $key_mountspeed 3
@@ -745,16 +747,18 @@ end_while
 // Remove the mount
 send $key_mount
 
-// Attack loop: 3 rounds per pass, each round ends with a heal check and a target switch
+// Attack loop: #attack_rounds rounds per pass, each round ends with a heal check and a target switch
 // Stops when the boss color is missing 2 passes in a row
 // Safety limit of 500 passes so it can never run forever
 set #miss 0
 set #rounds 0
 send $key_target
 while 1
-    gosub attack_round
-    gosub attack_round
-    gosub attack_round
+    set #r 0
+    while #r < #attack_rounds
+        gosub attack_round
+        set #r #r + 1
+    end_while
 
     set #c findcolor (465, 48 473, 79 185 %arr)
     if #c = 0
